@@ -158,6 +158,8 @@ async function findMatchesBatch(
 				continue;
 			}
 
+			logger.info("%s %s %s", progress, chalk.dim("Searching for"), name);
+
 			const sleep = new Promise((r) => setTimeout(r, delay * 1000));
 			
 			const { matches, searchedIndexers } = await findOnOtherSites(
