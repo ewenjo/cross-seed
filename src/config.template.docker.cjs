@@ -3,6 +3,11 @@
 
 module.exports = {
 	/**
+	 * File to start at when doing a search. Useful for resuming after a crash.
+	 */
+	startAt: 0,
+	
+	/**
 	 * Pause at least this much in between each search. Higher is safer.
 	 * It is not recommended to set this to less than 2 seconds.
 	 */

@@ -143,17 +143,21 @@ async function findMatchesBatch(
 	samples: Searchee[],
 	hashesToExclude: string[]
 ) {
-	const { delay } = getRuntimeConfig();
+	const { delay, startAt } = getRuntimeConfig();
 
 	let totalFound = 0;
 	for (const [i, sample] of samples.entries()) {
 		try {
-			const sleep = new Promise((r) => setTimeout(r, delay * 1000));
-
 			const progress = chalk.blue(`[${i + 1}/${samples.length}]`);
 			const name = stripExtension(sample.name);
-			logger.info("%s %s %s", progress, chalk.dim("Searching for"), name);
 
+			if (i < startAt) {
+				logger.info("%s %s %s", progress, chalk.dim("Skipping"), name);
+				continue;
+			}
+
+			const sleep = new Promise((r) => setTimeout(r, delay * 1000));
+			
 			const { matches, searchedIndexers } = await findOnOtherSites(
 				sample,
 				hashesToExclude

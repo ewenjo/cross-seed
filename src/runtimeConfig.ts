@@ -1,6 +1,7 @@
 import { Action, LinkType, MatchMode } from "./constants.js";
 
 export interface RuntimeConfig {
+	startAt: number;
 	offset: number;
 	delay: number;
 	torznab: string[];
