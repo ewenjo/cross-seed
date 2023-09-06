@@ -10,6 +10,7 @@ const packageDotJson = require("../package.json");
 
 interface FileConfig {
 	action?: Action;
+	startAt?: number;
 	configVersion?: number;
 	delay?: number;
 	includeEpisodes?: boolean;

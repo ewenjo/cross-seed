@@ -193,6 +193,12 @@ function createCommandWithSharedOptions(name, description) {
 			"cross-seed will send POST requests to this url with a JSON payload of { title, body }",
 			fileConfig.notificationWebhookUrl
 		)
+		.option(
+			"--start-at <number>",
+			"Start at a specific torrent in the torrentDir",
+			parseFloat,
+			fallback(fileConfig.startAt, 0)
+		)
 		.requiredOption(
 			"-d, --delay <delay>",
 			"Pause duration (seconds) between searches",
