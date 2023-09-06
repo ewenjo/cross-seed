@@ -145,6 +145,8 @@ async function findMatchesBatch(
 ) {
 	const { delay, startAt } = getRuntimeConfig();
 
+	logger.info("Starting at: %s", startAt);
+
 	let totalFound = 0;
 	for (const [i, sample] of samples.entries()) {
 		try {
