@@ -15,6 +15,7 @@ export interface RuntimeConfig {
 	torrentDir: string;
 	outputDir: string;
 	includeEpisodes: boolean;
+	includeSingleEpisodes: boolean;
 	verbose: boolean;
 	includeNonVideos: boolean;
 	fuzzySizeThreshold: number;
@@ -24,6 +25,7 @@ export interface RuntimeConfig {
 	rtorrentRpcUrl: string;
 	qbittorrentUrl: string;
 	transmissionRpcUrl: string;
+	delugeRpcUrl: string;
 	duplicateCategories: boolean;
 	notificationWebhookUrl: string;
 	torrents: string[];
@@ -33,6 +35,7 @@ export interface RuntimeConfig {
 	snatchTimeout: number;
 	searchTimeout: number;
 	searchLimit: number;
+	apiAuth: boolean;
 }
 
 let runtimeConfig: RuntimeConfig;

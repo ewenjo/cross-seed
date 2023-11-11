@@ -3,6 +3,7 @@ import chalk from "chalk";
 import { Option, program } from "commander";
 import ms from "ms";
 import { inspect } from "util";
+import { getApiKeyFromDatabase, resetApiKey } from "./auth.js";
 import { generateConfig, getFileConfig } from "./configuration.js";
 import {
 	Action,
@@ -134,8 +135,13 @@ function createCommandWithSharedOptions(name, description) {
 		)
 		.option(
 			"-e, --include-episodes",
-			"Include single-episode torrents in the search",
+			"Include all episode torrents in the search (including from season packs)",
 			fallback(fileConfig.includeEpisodes, false)
+		)
+		.option(
+			"--include-single-episodes",
+			"Include single episode torrents in the search",
+			fallback(fileConfig.includeSingleEpisodes, false)
 		)
 		.option(
 			"--no-include-non-videos",
@@ -182,6 +188,11 @@ function createCommandWithSharedOptions(name, description) {
 			"--transmission-rpc-url <url>",
 			"The url of your Transmission RPC interface. Requires '-A inject'. See the docs for more information.",
 			fileConfig.transmissionRpcUrl
+		)
+		.option(
+			"--deluge-rpc-url <url>",
+			"The url of your Deluge JSON-RPC interface. Requires '-A inject'. See the docs for more information.",
+			fileConfig.delugeRpcUrl
 		)
 		.option(
 			"--duplicate-categories",
@@ -285,6 +296,24 @@ program
 		);
 	});
 
+program
+	.command("api-key")
+	.description("Show the api key")
+	.action(async () => {
+		await db.migrate.latest();
+		console.log(await getApiKeyFromDatabase());
+		await db.destroy();
+	});
+
+program
+	.command("reset-api-key")
+	.description("Reset the api key")
+	.action(async () => {
+		await db.migrate.latest();
+		console.log(await resetApiKey());
+		await db.destroy();
+	});
+
 createCommandWithSharedOptions("daemon", "Start the cross-seed daemon")
 	.option(
 		"-p, --port <port>",
@@ -293,6 +322,12 @@ createCommandWithSharedOptions("daemon", "Start the cross-seed daemon")
 		fallback(fileConfig.port, 2468)
 	)
 	.option("--host <host>", "Bind to a specific IP address", fileConfig.host)
+	.option(
+		"--api-auth",
+		"Require API auth via API key",
+		fallback(fileConfig.apiAuth, false)
+	)
+	.option("--no-api-auth", "Don't require API auth")
 	.option("--no-port", "Do not listen on any port")
 	.option(
 		"--search-cadence <cadence>",
@@ -310,6 +345,7 @@ createCommandWithSharedOptions("daemon", "Start the cross-seed daemon")
 			setRuntimeConfig(runtimeConfig);
 			initializeLogger();
 			initializePushNotifier();
+			logger.info(`${PROGRAM_NAME} v${PROGRAM_VERSION}`);
 			logger.verbose({
 				label: Label.CONFIGDUMP,
 				message: inspect(runtimeConfig),

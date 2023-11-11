@@ -14,6 +14,7 @@ interface FileConfig {
 	configVersion?: number;
 	delay?: number;
 	includeEpisodes?: boolean;
+	includeSingleEpisodes?: boolean;
 	outputDir?: string;
 	rtorrentRpcUrl?: string;
 	includeNonVideos?: boolean;
@@ -31,10 +32,12 @@ interface FileConfig {
 	torznab?: string[];
 	qbittorrentUrl?: string;
 	transmissionRpcUrl?: string;
+	delugeRpcUrl?: string;
 	duplicateCategories?: boolean;
 	notificationWebhookUrl?: string;
 	port?: number;
 	host?: string;
+	apiAuth?: boolean;
 	searchCadence?: string;
 	rssCadence?: string;
 	snatchTimeout?: string;

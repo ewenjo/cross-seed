@@ -1,10 +1,11 @@
-import { basename } from "path";
+import path, { basename } from "path";
 import {
 	EP_REGEX,
 	MOVIE_REGEX,
 	SEASON_REGEX,
 	VIDEO_EXTENSIONS,
 } from "./constants.js";
+import { Result, resultOf, resultOfErr } from "./Result.js";
 
 export enum MediaType {
 	EPISODE = "episode",
@@ -80,7 +81,6 @@ export function humanReadable(timestamp: number): string {
 }
 
 export function formatAsList(strings: string[]) {
-	// @ts-expect-error Intl.ListFormat totally exists on node 12
 	return new Intl.ListFormat("en", {
 		style: "long",
 		type: "conjunction",
@@ -92,4 +92,24 @@ export function fallback<T>(...args: T[]): T {
 		if (arg !== undefined) return arg;
 	}
 	return undefined;
+}
+
+export function extractCredentialsFromUrl(
+	url: string,
+	basePath?: string
+): Result<{ username: string; password: string; href: string }, "invalid URL"> {
+	try {
+		const { origin, pathname, username, password } = new URL(url);
+		return resultOf({
+			username: decodeURIComponent(username),
+			password: decodeURIComponent(password),
+			href: basePath
+				? origin + path.posix.join(pathname, basePath)
+				: pathname === "/"
+				? origin
+				: origin + pathname,
+		});
+	} catch (e) {
+		return resultOfErr("invalid URL");
+	}
 }

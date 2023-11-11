@@ -11,7 +11,7 @@ import { Metafile } from "./parseTorrent.js";
 import { Result, resultOf, resultOfErr } from "./Result.js";
 import { getRuntimeConfig } from "./runtimeConfig.js";
 import { createSearcheeFromTorrentFile, Searchee } from "./searchee.js";
-import { stripExtension } from "./utils.js";
+import { reformatTitleForSearching, stripExtension } from "./utils.js";
 
 export interface TorrentLocator {
 	infoHash?: string;
@@ -201,15 +201,36 @@ export async function getTorrentByFuzzyName(
 	name: string
 ): Promise<null | Metafile> {
 	const allNames = await db("torrent").select("name", "file_path");
+	const fullMatch = reformatTitleForSearching(name)
+		.replace(/[^a-z0-9]/gi, "")
+		.toLowerCase();
+
+	// Attempt to filter torrents in DB to match incoming torrent before fuzzy check
+	let filteredNames = [];
+	if (fullMatch) {
+		filteredNames = allNames.filter((dbName) => {
+			const dbMatch = reformatTitleForSearching(dbName.name)
+				.replace(/[^a-z0-9]/gi, "")
+				.toLowerCase();
+			if (!dbMatch) return false;
+			return fullMatch === dbMatch;
+		});
+	}
+
+	// If none match, proceed with fuzzy name check on all names.
+	filteredNames = filteredNames.length > 0 ? filteredNames : allNames;
+
 	// @ts-expect-error fuse types are confused
-	const potentialMatches = new Fuse(allNames, {
+	const potentialMatches = new Fuse(filteredNames, {
 		keys: ["name"],
 		distance: 6,
 		threshold: 0.25,
 	}).search(name);
 
+	// Valid matches exist
 	if (potentialMatches.length === 0) return null;
-	const [firstMatch] = potentialMatches;
+
+	const firstMatch = potentialMatches[0];
 	return parseTorrentFromFilename(firstMatch.item.file_path);
 }
 

@@ -10,6 +10,7 @@ import { Label, logger, logOnce } from "../logger.js";
 import { Metafile } from "../parseTorrent.js";
 import { getRuntimeConfig } from "../runtimeConfig.js";
 import { Searchee } from "../searchee.js";
+import { extractCredentialsFromUrl } from "../utils.js";
 import { TorrentClient } from "./TorrentClient.js";
 
 const X_WWW_FORM_URLENCODED = {
@@ -85,36 +86,26 @@ interface Category {
 }
 
 export default class QBittorrent implements TorrentClient {
-	url: URL;
 	cookie: string;
+	url: { username: string; password: string; href: string };
 
 	constructor() {
 		const { qbittorrentUrl } = getRuntimeConfig();
-		try {
-			this.url = new URL(`${qbittorrentUrl}/api/v2`);
-		} catch (e) {
-			throw new CrossSeedError("qBittorrent url must be percent-encoded");
-		}
+		this.url = extractCredentialsFromUrl(
+			qbittorrentUrl,
+			"/api/v2"
+		).unwrapOrThrow(
+			new CrossSeedError("qBittorrent url must be percent-encoded")
+		);
 	}
 
 	async login(): Promise<void> {
-		const { origin, pathname, username, password } = this.url;
-
-		let searchParams;
-		try {
-			searchParams = new URLSearchParams({
-				username: decodeURIComponent(username),
-				password: decodeURIComponent(password),
-			});
-		} catch (e) {
-			throw new CrossSeedError("qBittorrent url must be percent-encoded");
-		}
-
 		let response: Response;
+		const { href, username, password } = this.url;
 		try {
-			response = await fetch(`${origin}${pathname}/auth/login`, {
+			response = await fetch(`${href}/auth/login`, {
 				method: "POST",
-				body: searchParams,
+				body: new URLSearchParams({ username, password }),
 			});
 		} catch (e) {
 			throw new CrossSeedError(`qBittorrent login failed: ${e.message}`);
@@ -151,8 +142,8 @@ export default class QBittorrent implements TorrentClient {
 			label: Label.QBITTORRENT,
 			message: `Making request to ${path} with body ${body.toString()}`,
 		});
-		const { origin, pathname } = this.url;
-		const response = await fetch(`${origin}${pathname}${path}`, {
+
+		const response = await fetch(`${this.url.href}${path}`, {
 			method: "post",
 			headers: { Cookie: this.cookie, ...headers },
 			body,
@@ -272,7 +263,7 @@ export default class QBittorrent implements TorrentClient {
 		searchee: Searchee,
 		path?: string
 	): Promise<InjectionResult> {
-		const { duplicateCategories, linkDir, skipRecheck, dataCategory } =
+		const { duplicateCategories, skipRecheck, dataCategory } =
 			getRuntimeConfig();
 		try {
 			if (await this.isInfoHashInClient(newTorrent.infoHash)) {

@@ -17,13 +17,20 @@ module.exports = {
 	 * List of Torznab URLs.
 	 * For Jackett, click "Copy RSS feed"
 	 * For Prowlarr, click on the indexer name and copy the Torznab Url, then append "?apikey=YOUR_PROWLARR_API_KEY"
-	 * Wrap each URL in quotation marks, and separate them with commas.
+	 * Wrap each URL in quotation marks, and separate them with commas, and surround the entire set in brackets.
 	 */
 	torznab: [],
 
 	/**
-	 * To search with downloaded data, you can pass in directories to your downloaded torrent data
-	 * to find matches rather using the torrent files themselves for matching.
+	 * To search with downloaded data, you can pass in directories to your downloaded torrent
+	 * data to find matches rather using the torrent files themselves for matching.
+	 *
+	 * If enabled, this needs to be surrounded by brackets. Windows users will need to use
+	 * double backslash in all paths in this config.
+	 * e.g.
+	 * 		dataDirs: ["/path/here"],
+	 * 		dataDirs: ["/path/here", "/other/path/here"],
+	 * 		dataDirs: ["C:\\My Data\\Downloads"]
 	 */
 	dataDirs: undefined,
 
@@ -68,10 +75,13 @@ module.exports = {
 	maxDataDepth: 2,
 
 	/**
-	 * Directory containing torrent files.
+	 * Directory containing .torrent files.
+	 * For qBittorrent, this is BT_Backup
 	 * For rtorrent, this is your session directory
-	 * as configured in your .rtorrent.rc file.
-	 * For deluge, this is ~/.config/deluge/state.
+	 * 		as configured in your .rtorrent.rc file.
+	 * For Deluge, this is ~/.config/deluge/state.
+	 * For Transmission, this would be ~/.config/transmission/torrents
+	 *
 	 * Don't change this for Docker.
 	 * Instead set the volume mapping on your docker container.
 	 */
@@ -85,15 +95,24 @@ module.exports = {
 	outputDir: "/cross-seeds",
 
 	/**
-	 * Whether to search for single episode torrents
+	 * Whether to search for all episode torrents, including those from season packs. This option overrides includeSingleEpisodes.
 	 */
 	includeEpisodes: false,
 
 	/**
+	 * Whether to include single episode torrents in the search (not from season packs).
+	 * Like `includeEpisodes` but slightly more restrictive.
+	 */
+	includeSingleEpisodes: false,
+
+	/**
 	 * Include torrents which contain non-video files
-	 * This option does not override includeEpisodes.
-	 * To search for everything except episodes, use (includeEpisodes: false, includeNonVideos: true)
+	 * This option does not override includeEpisodes or includeSingleEpisodes.
+	 *
+	 * To search for everything except episodes, use (includeEpisodes: false, includeSingleEpisodes: false, includeNonVideos: true)
 	 * To search for everything including episodes, use (includeEpisodes: true, includeNonVideos: true)
+	 * To search for everything except season pack episodes (data-based)
+	 *    use (includeEpisodes: false, includeSingleEpisodes: true, includeNonVideos: true)
 	 */
 	includeNonVideos: false,
 
@@ -154,9 +173,19 @@ module.exports = {
 	transmissionRpcUrl: undefined,
 
 	/**
-	 * qBittorrent-specific
-	 * Whether to inject using categories with the same save paths as your normal categories.
-	 * Example: if you have a category called "Movies",
+	 * The url of your Deluge JSON-RPC interface.
+	 * Usually ends with "/json".
+	 * Only relevant with action: "inject".
+	 * Supply your WebUI password as well
+	 * "http://:password@localhost:8112/json"
+	 */
+	delugeRpcUrl: undefined,
+
+	/**
+	 * qBittorrent and Deluge specific
+	 * Whether to inject using the same labels/categories as the original torrent.
+	 * qBittorrent: This will apply the category's save path
+	 * Example: if you have a label/category called "Movies",
 	 * this will automatically inject cross-seeds to "Movies.cross-seed"
 	 */
 	duplicateCategories: false,
@@ -179,6 +208,13 @@ module.exports = {
 	 * Default is "0.0.0.0"
 	 */
 	host: undefined,
+
+	/**
+	 * Whether to require authentication for API.
+	 * Run the command `cross-seed api-key` to find your api key.
+	 * Keys can be provided in an X-Api-Key HTTP header or a query param.
+	 */
+	apiAuth: true,
 
 	/**
 	 * Run rss scans on a schedule. Format: https://github.com/vercel/ms
@@ -226,7 +262,7 @@ module.exports = {
 	searchTimeout: undefined,
 
 	/**
-	 * The number of searches to be done before stop.
+	 * The number of searches to be done before it stops.
 	 * Combine this with "excludeRecentSearch" and "searchCadence" to smooth long-term API usage patterns.
 	 * Default is no limit.
 	 */

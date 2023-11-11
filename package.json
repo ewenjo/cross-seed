@@ -1,12 +1,14 @@
 {
 	"name": "cross-seed",
-	"version": "5.4.2",
-	"description": "Query Jackett for cross-seedable torrents",
+	"version": "5.8.1",
+	"description": "Fully-automatic cross-seeding with Torznab",
 	"scripts": {
 		"test": "true",
 		"build": "tsc",
 		"watch": "tsc --watch",
-		"prepublishOnly": "rimraf dist && npm run build && husky install"
+		"prepublishOnly": "rimraf dist && npm run build && husky install",
+		"lint": "prettier --check 'src/{**/*,*}.{js,ts,cjs,mjs}' && eslint 'src/{**/*,*}.{js,ts,cjs,mjs}'",
+		"typecheck": "tsc --noEmit"
 	},
 	"bin": {
 		"cross-seed": "dist/cmd.js"
